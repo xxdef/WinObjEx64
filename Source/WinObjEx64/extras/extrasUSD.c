@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        01 Nov 2019
+*  DATE:        02 Nov 2019
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -47,6 +47,8 @@ VOID UsdDumpSharedRegion(
     WCHAR               szValue[MAX_PATH + 1];
 
     PKUSER_SHARED_DATA  pUserSharedData;
+    HWND hwnd;
+
 
     do {
 
@@ -54,6 +56,8 @@ VOID UsdDumpSharedRegion(
 
         if (IsBadReadPtr(pUserSharedData, sizeof(KUSER_SHARED_DATA)))
             break;
+
+        hwnd = GetDlgItem(hwndParent, ID_USDDUMPGROUPBOX);
 
         if (!supInitTreeListForDump(hwndParent, &UsdTreeList)) {
             break;

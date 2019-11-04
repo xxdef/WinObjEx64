@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        01 Nov 2019
+*  DATE:        02 Nov 2019
 *
 *  Common header file for the user interface.
 *
@@ -18,8 +18,13 @@
 *******************************************************************************/
 #pragma once
 
-#define SplitterSize          3
-#define SplitterMargin        80
+#define SplitterSize                3
+#define SplitterMargin              80
+
+#define DefaultSystemDpi            96
+#define TreeListDumpObjWndPosX      12
+#define TreeListDumpObjWndPosY      20
+#define TreeListDumpObjWndScaleSub  4
 
 typedef	struct _OE_LIST_ITEM {
     struct _OE_LIST_ITEM *Prev;

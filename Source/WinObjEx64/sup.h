@@ -4,9 +4,9 @@
 *
 *  TITLE:       SUP.H
 *
-*  VERSION:     1.80
+*  VERSION:     1.82
 *
-*  DATE:        29 June 2019
+*  DATE:        02 Nov 2019
 *
 *  Common header file for the program support routines.
 *
@@ -619,3 +619,6 @@ VOID supShowNtStatus(
     _In_ HWND hWnd,
     _In_ LPWSTR lpText,
     _In_ NTSTATUS Status);
+
+UINT supGetDPIValue(
+    _In_opt_ HWND hWnd);

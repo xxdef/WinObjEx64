@@ -4,9 +4,9 @@
 *
 *  TITLE:       ABOUTDLG.C
 *
-*  VERSION:     1.74
+*  VERSION:     1.82
 *
-*  DATE:        27 May 2019
+*  DATE:        02 Nov 2019
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -295,6 +295,9 @@ VOID AboutDialogCollectGlobals(
         else
             _strcat(lpDestBuffer, TEXT("no\r\n"));
     }
+
+    _strcat(lpDestBuffer, TEXT("DPI Value: "));
+    ultostr(supGetDPIValue(NULL), _strend(lpDestBuffer));
 }
 
 /*
@@ -349,7 +352,7 @@ INT_PTR AboutDialogShowGlobals(
         hwnd = CreateWindowEx(
             0,
             WC_EDIT,
-            TEXT("WinObjEx64 Globals"),
+            TEXT("WinObjEx64 Globals & Variables"),
             WS_OVERLAPPEDWINDOW | WS_VSCROLL | ES_MULTILINE,
             CW_USEDEFAULT,
             CW_USEDEFAULT,

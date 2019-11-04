@@ -4,9 +4,9 @@
 *
 *  TITLE:       SUP.C
 *
-*  VERSION:     1.81
+*  VERSION:     1.82
 *
-*  DATE:        09 Oct 2019
+*  DATE:        02 Nov 2019
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -265,6 +265,53 @@ BOOL supVirtualFree(
 }
 
 /*
+* supGetDPIValue
+*
+* Purpose:
+*
+* Return DPI value for system or specific window (win10+).
+*
+*/
+UINT supGetDPIValue(
+    _In_opt_ HWND hWnd
+)
+{
+    HDC hDc;
+
+    UINT uDpi = DefaultSystemDpi;
+    DPI_AWARENESS dpiAwareness;
+
+    if (g_NtBuildNumber >= 14393) {
+        
+        dpiAwareness = g_ExtApiSet.GetAwarenessFromDpiAwarenessContext(
+            g_ExtApiSet.GetThreadDpiAwarenessContext());
+
+        switch (dpiAwareness) {
+
+        // Scale the window to the system DPI
+        case DPI_AWARENESS_SYSTEM_AWARE:
+            uDpi = g_ExtApiSet.GetDpiForSystem();
+            break;
+
+        // Scale the window to the monitor DPI
+        case DPI_AWARENESS_PER_MONITOR_AWARE:
+            uDpi = g_ExtApiSet.GetDpiForWindow(hWnd);
+            break;
+        }
+
+    }
+    else {
+        hDc = GetDC(0);
+        if (hDc) {
+            uDpi = (UINT)GetDeviceCaps(hDc, LOGPIXELSX);
+            ReleaseDC(0, hDc);
+        }
+    }
+
+    return uDpi;
+}
+
+/*
 * supInitTreeListForDump
 *
 * Purpose:
@@ -277,18 +324,31 @@ BOOL supInitTreeListForDump(
     _Out_ HWND *pTreeListHwnd
 )
 {
-    HWND     TreeList;
+    HWND     TreeList, hWndGroupBox;
     HDITEM   hdritem;
     RECT     rc;
+
+    UINT uDpi;
+    INT dpiScaledX, dpiScaledY, iScaledWidth, iScaledHeight, iScaleSub;
 
     if (pTreeListHwnd == NULL) {
         return FALSE;
     }
+    
+    uDpi = supGetDPIValue(NULL);
+    dpiScaledX = MulDiv(TreeListDumpObjWndPosX, uDpi, DefaultSystemDpi);
+    dpiScaledY = MulDiv(TreeListDumpObjWndPosY, uDpi, DefaultSystemDpi);
 
-    GetClientRect(hwndParent, &rc);
+    hWndGroupBox = GetDlgItem(hwndParent, ID_OBJECTDUMPGROUPBOX);
+    GetWindowRect(hWndGroupBox, &rc);
+    iScaleSub = MulDiv(TreeListDumpObjWndScaleSub, uDpi, DefaultSystemDpi);
+    iScaledWidth = (rc.right - rc.left) - dpiScaledX  - iScaleSub;
+    iScaledHeight = (rc.bottom - rc.top) - dpiScaledY - iScaleSub;
+
     TreeList = CreateWindowEx(WS_EX_STATICEDGE, WC_TREELIST, NULL,
-        WS_VISIBLE | WS_CHILD | WS_TABSTOP | TLSTYLE_COLAUTOEXPAND | TLSTYLE_LINKLINES, 12, 20,
-        rc.right - 26, rc.bottom - 34, hwndParent, NULL, NULL, NULL);
+        WS_VISIBLE | WS_CHILD | WS_TABSTOP | TLSTYLE_COLAUTOEXPAND | TLSTYLE_LINKLINES, 
+        dpiScaledX, dpiScaledY,
+        iScaledWidth, iScaledHeight, hwndParent, NULL, NULL, NULL);
 
     if (TreeList == NULL) {
         *pTreeListHwnd = NULL;
@@ -1497,6 +1557,7 @@ VOID supInit(
     sapiCreateSetupDBSnapshot();
     g_pObjectTypesInfo = (POBJECT_TYPES_INFORMATION)supGetObjectTypesInfo();
 
+    //Result ignored intentionally and used only in debug.
     ExApiSetInit();
 }
 
