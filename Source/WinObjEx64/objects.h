@@ -4,9 +4,9 @@
 *
 *  TITLE:       OBJECTS.H
 *
-*  VERSION:     1.81
+*  VERSION:     1.82
 *
-*  DATE:        10 Oct 2019
+*  DATE:        03 Nov 2019
 *
 *  Header file for internal Windows object types handling.
 *
@@ -91,6 +91,7 @@ typedef struct _WOBJ_TYPE_DESC {
     INT ResourceImageId; //resouce id for icon
     INT ResourceStringId; //resource id in stringtable
     INT ImageIndex; //individual image id for each object type (maybe the same for few objects)
+    HICON ObjectIcon;
 } WOBJ_TYPE_DESC, *PWOBJ_TYPE_DESC;
 
 #define OBTYPE_NAME_DESKTOP         L"Desktop"

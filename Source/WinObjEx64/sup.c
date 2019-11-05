@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        02 Nov 2019
+*  DATE:        03 Nov 2019
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -6051,4 +6051,73 @@ NTSTATUS supPrivilegeEnabled(
     *pfResult = bResult;
 
     return status;
+}
+
+/*
+* supLoadIconForObjectType
+*
+* Purpose:
+*
+* Load icon for object (or its type) which properties is currently viewed.
+*
+*/
+BOOLEAN supLoadIconForObjectType(
+    _In_ HWND hwndDlg,
+    _In_ PROP_OBJECT_INFO *Context,
+    _In_ HIMAGELIST ImageList,
+    _In_ BOOLEAN IsShadow)
+{
+    HICON hIcon;
+    INT ImageIndex;
+
+    if (IsShadow)
+        ImageIndex = Context->ShadowTypeDescription->ImageIndex;
+    else
+        ImageIndex = Context->TypeDescription->ImageIndex;
+
+    hIcon = ImageList_GetIcon(
+        ImageList,
+        ImageIndex,
+        ILD_NORMAL | ILD_TRANSPARENT);
+
+    if (hIcon) {
+
+        SendMessage(GetDlgItem(hwndDlg, ID_OBJECT_ICON), STM_SETIMAGE, IMAGE_ICON, (LPARAM)hIcon);
+
+        if (IsShadow)
+            Context->ShadowTypeDescription->ObjectIcon = hIcon;
+        else 
+            Context->TypeDescription->ObjectIcon = hIcon;
+
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+/*
+* supDestroyIconForObjectType
+*
+* Purpose:
+*
+* Destroy icon used to represent object (or its type) which properties is currently viewed.
+*
+*/
+VOID supDestroyIconForObjectType(
+    _In_ PROP_OBJECT_INFO *Context,
+    _In_ BOOLEAN IsShadow
+)
+{
+    if (IsShadow) {
+        if (Context->ShadowTypeDescription->ObjectIcon) {
+            DestroyIcon(Context->ShadowTypeDescription->ObjectIcon);
+            Context->ShadowTypeDescription->ObjectIcon = NULL;
+        }
+    }
+    else {
+        if (Context->TypeDescription->ObjectIcon) {
+            DestroyIcon(Context->TypeDescription->ObjectIcon);
+            Context->TypeDescription->ObjectIcon = NULL;
+        }
+    }
 }

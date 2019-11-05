@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        02 Nov 2019
+*  DATE:        03 Nov 2019
 *
 *  Common header file for the program support routines.
 *
@@ -622,3 +622,13 @@ VOID supShowNtStatus(
 
 UINT supGetDPIValue(
     _In_opt_ HWND hWnd);
+
+BOOLEAN supLoadIconForObjectType(
+    _In_ HWND hwndDlg,
+    _In_ PROP_OBJECT_INFO *Context,
+    _In_ HIMAGELIST ImageList,
+    _In_ BOOLEAN IsShadow);
+
+VOID supDestroyIconForObjectType(
+    _In_ PROP_OBJECT_INFO *Context,
+    _In_ BOOLEAN IsShadow);
