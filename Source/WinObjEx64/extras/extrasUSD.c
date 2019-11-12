@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        02 Nov 2019
+*  DATE:        03 Nov 2019
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -184,7 +184,7 @@ VOID UsdDumpSharedRegion(
             for (i = 0; i < PROCESSOR_FEATURE_MAX; i++) {
                 if (pUserSharedData->ProcessorFeatures[i]) {
                     bAny = TRUE;
-                    if (i > RTL_NUMBER_OF(T_PROCESSOR_FEATURES)) {
+                    if (i >= RTL_NUMBER_OF(T_PROCESSOR_FEATURES)) {
                         lpType = T_Unknown;
                     }
                     else {

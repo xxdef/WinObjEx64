@@ -4,9 +4,9 @@
 *
 *  TITLE:       PROPPROCESS.C
 *
-*  VERSION:     1.74
+*  VERSION:     1.82
 *
-*  DATE:        03 May 2019
+*  DATE:        08 Nov 2019
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -532,6 +532,9 @@ VOID ProcessListSetInfo(
                 break;
             case ObjectTypeMemoryPartition:
                 DesiredAccess = MEMORY_PARTITION_QUERY_ACCESS;
+                break;
+            case ObjectTypeSession:
+                DesiredAccess = SESSION_QUERY_ACCESS;
                 break;
             default:
                 DesiredAccess = MAXIMUM_ALLOWED;

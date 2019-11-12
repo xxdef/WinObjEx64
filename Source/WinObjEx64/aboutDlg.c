@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        02 Nov 2019
+*  DATE:        08 Nov 2019
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -14,14 +14,10 @@
 * PARTICULAR PURPOSE.
 *
 *******************************************************************************/
-#define OEMRESOURCE
 #include "global.h"
 #include "msvcver.h"
 
 #undef _WINE_NB_DEBUG
-
-HWND g_hwndGlobals;
-WNDPROC g_GlobalsEditOriginalWndProc;
 
 /*
 * AboutDialogInit
@@ -47,7 +43,13 @@ VOID AboutDialogInit(
     SYSTEM_VHD_BOOT_INFORMATION *psvbi;
 
     SetDlgItemText(hwndDlg, ID_ABOUT_PROGRAM, PROFRAM_NAME_AND_TITLE);
-    SetDlgItemText(hwndDlg, ID_ABOUT_BUILDINFO, PROGRAM_VERSION);
+
+    rtl_swprintf_s(szBuffer, 100, TEXT("%lu.%lu.%lu"),
+        PROGRAM_MAJOR_VERSION,
+        PROGRAM_MINOR_VERSION,
+        PROGRAM_REVISION_NUMBER);
+
+    SetDlgItemText(hwndDlg, ID_ABOUT_BUILDINFO, szBuffer);
 
     //
     // Set dialog icon.
@@ -195,6 +197,15 @@ VOID AboutDialogInit(
     SetFocus(GetDlgItem(hwndDlg, IDOK));
 }
 
+VOID GlobalsAppendText(
+    _In_ HWND hwndEdit,
+    _In_ LPWSTR lpText)
+{
+    int idx = GetWindowTextLength(hwndEdit);
+    SendMessage(hwndEdit, EM_SETSEL, (WPARAM)idx, (LPARAM)idx);
+    SendMessage(hwndEdit, EM_REPLACESEL, 0, (LPARAM)lpText);
+}
+
 /*
 * AboutDialogCollectGlobals
 *
@@ -204,197 +215,299 @@ VOID AboutDialogInit(
 *
 */
 VOID AboutDialogCollectGlobals(
-    _In_ HWND hwndParent,
-    _In_ LPWSTR lpDestBuffer
+    _In_ HWND hwndDlg,
+    _In_ HWND hwndParent
 )
 {
-    BOOLEAN bAllowed;
+    BOOLEAN bCustomSignersAllowed;
+
+    WCHAR szBuffer[MAX_PATH * 4];
+    WCHAR szTemp[MAX_PATH];
+
+    SYSTEM_INFO SystemInfo;
+    HKEY hKey;
+    DWORD dwType, cbData, dwValue;
+
+    HWND hwndEdit = GetDlgItem(hwndDlg, IDC_GLOBALS);
+
+
+    RtlSecureZeroMemory(szBuffer, sizeof(szBuffer));
+    RtlSecureZeroMemory(szTemp, sizeof(szTemp));
 
     //
-    // Copy os name as is.
+    // Generic environment information.
     //
-    GetDlgItemText(hwndParent, ID_ABOUT_OSNAME, lpDestBuffer, MAX_PATH);
+    rtl_swprintf_s(szBuffer, 100, TEXT("Windows Object Explorer 64\t\t:\t%lu.%lu.%lu\r\n"),
+        PROGRAM_MAJOR_VERSION,
+        PROGRAM_MINOR_VERSION,
+        PROGRAM_REVISION_NUMBER);
+    GlobalsAppendText(hwndEdit, szBuffer);
 
-    _strcat(lpDestBuffer, TEXT("\r\n"));
+    GetDlgItemText(hwndParent, ID_ABOUT_OSNAME, szTemp, MAX_PATH);
 
-    _strcat(lpDestBuffer, TEXT("IsSecureBoot: "));
-    ultostr(g_kdctx.IsSecureBoot, _strend(lpDestBuffer));
-    _strcat(lpDestBuffer, TEXT("\r\n"));
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH * 2,
+        TEXT("Operation System\t\t\t:\t%s\r\n"),
+        szTemp);
+    GlobalsAppendText(hwndEdit, szBuffer);
 
-    _strcat(lpDestBuffer, TEXT("EnableExperimentalFeatures: "));
-    ultostr(g_WinObj.EnableExperimentalFeatures, _strend(lpDestBuffer));
-    _strcat(lpDestBuffer, TEXT("\r\n"));
+    if (ERROR_SUCCESS == RegOpenKeyEx(
+        HKEY_LOCAL_MACHINE,
+        TEXT("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0"),
+        0,
+        KEY_QUERY_VALUE,
+        &hKey))
+    {
+        RtlSecureZeroMemory(szTemp, sizeof(szTemp));
+        _strcpy(szBuffer, TEXT("Processor\t\t\t\t:\t"));
 
-    _strcat(lpDestBuffer, TEXT("IsWine: "));
-    ultostr(g_WinObj.IsWine, _strend(lpDestBuffer));
-    _strcat(lpDestBuffer, TEXT("\r\n"));
+        cbData = 128;
+        dwType = REG_NONE;
+        if (ERROR_SUCCESS == RegQueryValueEx(
+            hKey,
+            TEXT("Identifier"),
+            NULL,
+            &dwType,
+            (LPBYTE)&szTemp,
+            &cbData))
+        {
+            _strcat(szBuffer, szTemp);
+        }
 
-    _strcat(lpDestBuffer, TEXT("drvOpenLoadStatus: "));
-    ultostr(g_kdctx.drvOpenLoadStatus, _strend(lpDestBuffer));
+        _strcat(szBuffer, TEXT(", "));
+
+        cbData = 128;
+        dwType = REG_NONE;
+        if (ERROR_SUCCESS == RegQueryValueEx(
+            hKey,
+            TEXT("VendorIdentifier"),
+            NULL,
+            &dwType,
+            (LPBYTE)&szTemp,
+            &cbData))
+        {
+            _strcat(szBuffer, szTemp);
+        }
+
+        _strcat(szBuffer, TEXT(", "));
+
+        cbData = sizeof(DWORD);
+        dwType = REG_NONE;
+        dwValue = 0;
+        if (ERROR_SUCCESS == RegQueryValueEx(
+            hKey,
+            TEXT("~MHz"),
+            NULL,
+            &dwType,
+            (LPBYTE)&dwValue,
+            &cbData))
+        {
+            szTemp[0] = L'~';
+            szTemp[1] = 0;
+            ultostr(dwValue, &szTemp[1]);
+            _strcat(szTemp, TEXT("MHz"));
+            _strcat(szBuffer, szTemp);
+        }
+
+        _strcat(szBuffer, TEXT("\r\n"));
+        GlobalsAppendText(hwndEdit, szBuffer);
+
+        RegCloseKey(hKey);
+    }
+
+    GetSystemInfo(&SystemInfo);
+
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH * 2,
+        TEXT("Number of Processors\t\t:\t%lu, Mask 0x%08lX\r\n"),
+        SystemInfo.dwNumberOfProcessors,
+        SystemInfo.dwActiveProcessorMask);
+    GlobalsAppendText(hwndEdit, szBuffer);
+
+
+    //
+    // List g_kdctx.
+    //
+    GlobalsAppendText(hwndEdit, TEXT("\r\ng_kdctx variables\r\n"));
+
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH,
+        TEXT("IsSecureBoot\t\t\t:\t%lu\r\n"),
+        g_kdctx.IsSecureBoot);
+    GlobalsAppendText(hwndEdit, szBuffer);
+
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH,
+        TEXT("drvOpenLoadStatus\t\t:\t%lu"),
+        g_kdctx.drvOpenLoadStatus);
+
     if (g_kdctx.drvOpenLoadStatus == 0) {
-        _strcat(lpDestBuffer, TEXT(" (reported as OK)"));
+        _strcat(szBuffer, TEXT(" (reported as OK)"));
     }
-    _strcat(lpDestBuffer, TEXT("\r\n"));
+    _strcat(szBuffer, TEXT("\r\n"));
+    GlobalsAppendText(hwndEdit, szBuffer);
 
-    _strcat(lpDestBuffer, TEXT("IsFullAdmin: "));
-    ultostr(g_kdctx.IsFullAdmin, _strend(lpDestBuffer));
-    _strcat(lpDestBuffer, TEXT("\r\n"));
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH,
+        TEXT("IsFullAdmin\t\t\t:\t%lu\r\n"),
+        g_kdctx.IsFullAdmin);
+    GlobalsAppendText(hwndEdit, szBuffer);
 
-    _strcat(lpDestBuffer, TEXT("IsOurLoad: "));
-    ultostr(g_kdctx.IsOurLoad, _strend(lpDestBuffer));
-    _strcat(lpDestBuffer, TEXT("\r\n"));
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH,
+        TEXT("IsOurLoad\t\t\t:\t%lu\r\n"),
+        g_kdctx.IsOurLoad);
+    GlobalsAppendText(hwndEdit, szBuffer);
 
-    _strcat(lpDestBuffer, TEXT("DirectoryRootAddress: 0x"));
-    u64tohex(g_kdctx.DirectoryRootAddress, _strend(lpDestBuffer));
-    _strcat(lpDestBuffer, TEXT("\r\n"));
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH,
+        TEXT("DirectoryRootAddress\t\t:\t0x%p\r\n"),
+        g_kdctx.DirectoryRootAddress);
+    GlobalsAppendText(hwndEdit, szBuffer);
 
-    _strcat(lpDestBuffer, TEXT("DirectoryTypeIndex: "));
-    ultostr(g_kdctx.DirectoryTypeIndex, _strend(lpDestBuffer));
-    _strcat(lpDestBuffer, TEXT("\r\n"));
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH,
+        TEXT("DirectoryTypeIndex\t\t:\t%lu\r\n"),
+        g_kdctx.DirectoryTypeIndex);
+    GlobalsAppendText(hwndEdit, szBuffer);
 
-    _strcat(lpDestBuffer, TEXT("hDevice: 0x"));
-    u64tostr((ULONG_PTR)g_kdctx.hDevice, _strend(lpDestBuffer));
-    _strcat(lpDestBuffer, TEXT("\r\n"));
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH,
+        TEXT("hDevice\t\t\t\t:\t%llu\r\n"),
+        g_kdctx.hDevice);
+    GlobalsAppendText(hwndEdit, szBuffer);
 
-    _strcat(lpDestBuffer, TEXT("IopInvalidDeviceRequest: 0x"));
-    u64tostr((ULONG_PTR)g_kdctx.IopInvalidDeviceRequest, _strend(lpDestBuffer));
-    _strcat(lpDestBuffer, TEXT("\r\n"));
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH,
+        TEXT("IopInvalidDeviceRequest\t\t:\t0x%p\r\n"),
+        g_kdctx.IopInvalidDeviceRequest);
+    GlobalsAppendText(hwndEdit, szBuffer);
 
-    _strcat(lpDestBuffer, TEXT("KiServiceLimit: 0x"));
-    ultohex(g_kdctx.KiServiceLimit, _strend(lpDestBuffer));
-    _strcat(lpDestBuffer, TEXT("\r\n"));
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH,
+        TEXT("KiServiceLimit\t\t\t:\t%lX\r\n"),
+        g_kdctx.KiServiceLimit);
+    GlobalsAppendText(hwndEdit, szBuffer);
 
-    _strcat(lpDestBuffer, TEXT("KiServiceTableAddress: 0x"));
-    u64tohex(g_kdctx.KiServiceTableAddress, _strend(lpDestBuffer));
-    _strcat(lpDestBuffer, TEXT("\r\n"));
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH,
+        TEXT("KiServiceTableAddress\t\t:\t0x%p\r\n"),
+        g_kdctx.KiServiceTableAddress);
+    GlobalsAppendText(hwndEdit, szBuffer);
 
-    _strcat(lpDestBuffer, TEXT("NtOsBase: 0x"));
-    u64tohex((ULONG_PTR)g_kdctx.NtOsBase, _strend(lpDestBuffer));
-    _strcat(lpDestBuffer, TEXT("\r\n"));
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH,
+        TEXT("NtOsBase\t\t\t\t:\t0x%p\r\n"),
+        g_kdctx.NtOsBase);
+    GlobalsAppendText(hwndEdit, szBuffer);
 
-    _strcat(lpDestBuffer, TEXT("NtOsSize: 0x"));
-    ultohex(g_kdctx.NtOsSize, _strend(lpDestBuffer));
-    _strcat(lpDestBuffer, TEXT("\r\n"));
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH,
+        TEXT("NtOsSize\t\t\t\t:\t0x%lX\r\n"),
+        g_kdctx.NtOsSize);
+    GlobalsAppendText(hwndEdit, szBuffer);
 
-    _strcat(lpDestBuffer, TEXT("ObHeaderCookie: 0x"));
-    ultohex((ULONG)g_kdctx.ObHeaderCookie, _strend(lpDestBuffer));
-    _strcat(lpDestBuffer, TEXT("\r\n"));
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH,
+        TEXT("NtOsImageMap\t\t\t:\t0x%p\r\n"),
+        g_kdctx.NtOsImageMap);
+    GlobalsAppendText(hwndEdit, szBuffer);
 
-    _strcat(lpDestBuffer, TEXT("PrivateNamespaceLookupTable: 0x"));
-    u64tohex((ULONG_PTR)g_kdctx.PrivateNamespaceLookupTable, _strend(lpDestBuffer));
-    _strcat(lpDestBuffer, TEXT("\r\n"));
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH,
+        TEXT("ObHeaderCookie\t\t\t:\t0x%lX\r\n"),
+        g_kdctx.ObHeaderCookie);
+    GlobalsAppendText(hwndEdit, szBuffer);
 
-    _strcat(lpDestBuffer, TEXT("SystemRangeStart: 0x"));
-    u64tohex((ULONG_PTR)g_kdctx.SystemRangeStart, _strend(lpDestBuffer));
-    _strcat(lpDestBuffer, TEXT("\r\n"));
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH,
+        TEXT("PrivateNamespaceLookupTable\t:\t0x%p\r\n"),
+        g_kdctx.PrivateNamespaceLookupTable);
+    GlobalsAppendText(hwndEdit, szBuffer);
 
-    if (NT_SUCCESS(supCICustomKernelSignersAllowed(&bAllowed))) {
-        _strcat(lpDestBuffer, TEXT("Licensed for Custom Kernel Signers: "));
-        if (bAllowed)
-            _strcat(lpDestBuffer, TEXT("yes\r\n"));
-        else
-            _strcat(lpDestBuffer, TEXT("no\r\n"));
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH,
+        TEXT("SystemRangeStart\t\t\t:\t0x%llX\r\n"),
+        g_kdctx.SystemRangeStart);
+    GlobalsAppendText(hwndEdit, szBuffer);
+
+    //
+    // List g_WinObj (UI specific).
+    //
+    GlobalsAppendText(hwndEdit, TEXT("\r\ng_WinObj variables\r\n"));
+
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH,
+        TEXT("EnableExperimentalFeatures\t\t:\t%lu\r\n"),
+        g_WinObj.EnableExperimentalFeatures);
+    GlobalsAppendText(hwndEdit, szBuffer);
+
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH,
+        TEXT("IsWine\t\t\t\t:\t%lu\r\n"),
+        g_WinObj.IsWine);
+    GlobalsAppendText(hwndEdit, szBuffer);
+
+    //
+    // List other data.
+    //
+    GlobalsAppendText(hwndEdit, TEXT("\r\nOther data\r\n"));
+
+    if (NT_SUCCESS(supCICustomKernelSignersAllowed(&bCustomSignersAllowed))) {
+
+        rtl_swprintf_s(szBuffer,
+            MAX_PATH,
+            TEXT("Licensed for Custom Kernel Signers\t:\t%lu\r\n"),
+            bCustomSignersAllowed);
+        GlobalsAppendText(hwndEdit, szBuffer);
     }
 
-    _strcat(lpDestBuffer, TEXT("DPI Value: "));
-    ultostr(supGetDPIValue(NULL), _strend(lpDestBuffer));
+    rtl_swprintf_s(szBuffer,
+        MAX_PATH,
+        TEXT("DPI Value\t\t\t\t:\t%lu"),
+        supGetDPIValue(NULL));
+    GlobalsAppendText(hwndEdit, szBuffer);
+
+    SetFocus(hwndEdit);
 }
 
+
 /*
-* GlobalsCustomWindowProc
+* GlobalsWindowProc
 *
 * Purpose:
 *
-* Globals custom window procedure.
+* Globals dialog window procedure.
 *
 */
-LRESULT CALLBACK GlobalsCustomWindowProc(
+LRESULT CALLBACK GlobalsWindowProc(
     _In_ HWND hwnd,
     _In_ UINT uMsg,
     _In_ WPARAM wParam,
     _In_ LPARAM lParam
 )
 {
-    HFONT hFont;
+    HWND hwndParent = (HWND)lParam;
 
     switch (uMsg) {
-    case WM_CLOSE:
-        hFont = (HFONT)GetProp(hwnd, T_PROP_FONT);
-        if (hFont) {
-            DeleteObject(hFont);
-        }
-        RemoveProp(hwnd, T_PROP_FONT);
-        g_hwndGlobals = NULL;
+    case WM_INITDIALOG:
+
+        AboutDialogCollectGlobals(hwnd, hwndParent);
         break;
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam)) {
+        case IDCANCEL:
+            return EndDialog(hwnd, S_OK);
+            break;
+        default:
+            break;
+        }
+
     default:
         break;
     }
-    return CallWindowProc(g_GlobalsEditOriginalWndProc, hwnd, uMsg, wParam, lParam);
-}
-
-/*
-* AboutDialogShowGlobals
-*
-* Purpose:
-*
-* Output global variables to multiline edit window.
-*
-*/
-INT_PTR AboutDialogShowGlobals(
-    _In_ HWND hwndParent)
-{
-    HWND hwnd;
-    LPWSTR lpGlobalInfo;
-    HFONT hFont = NULL;
-
-    if (g_hwndGlobals == NULL) {      
-
-        hwnd = CreateWindowEx(
-            0,
-            WC_EDIT,
-            TEXT("WinObjEx64 Globals & Variables"),
-            WS_OVERLAPPEDWINDOW | WS_VSCROLL | ES_MULTILINE,
-            CW_USEDEFAULT,
-            CW_USEDEFAULT,
-            640,
-            480,
-            hwndParent,
-            0,
-            g_WinObj.hInstance,
-            NULL);
-
-        if (hwnd) {
-            hFont = supCreateFontIndirect(T_DEFAULT_AUX_FONT);
-            if (hFont) {
-                SendMessage(hwnd, WM_SETFONT, (WPARAM)hFont, 0);
-                SetProp(hwnd, T_PROP_FONT, hFont);
-            }
-            g_GlobalsEditOriginalWndProc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC);
-            if (g_GlobalsEditOriginalWndProc) {
-                SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)&GlobalsCustomWindowProc);
-            }
-        }
-        g_hwndGlobals = hwnd;
-    }
-    else {
-        SetActiveWindow(g_hwndGlobals);
-    }
-
-    //
-    // Set text to window.
-    //
-    if (g_hwndGlobals) {
-        lpGlobalInfo = (LPWSTR)supVirtualAlloc(PAGE_SIZE);
-        if (lpGlobalInfo) {
-            AboutDialogCollectGlobals(hwndParent, lpGlobalInfo);
-            SetWindowText(g_hwndGlobals, lpGlobalInfo);
-            SendMessage(g_hwndGlobals, EM_SETREADONLY, (WPARAM)1, 0);
-            supVirtualFree(lpGlobalInfo);
-        }
-        ShowWindow(g_hwndGlobals, SW_SHOWNORMAL);
-    }
-
-    return 1;
+    return 0;
 }
 
 /*
@@ -431,7 +544,12 @@ INT_PTR CALLBACK AboutDialogProc(
             return EndDialog(hwndDlg, S_OK);
             break;
         case IDC_ABOUT_GLOBALS:
-            return AboutDialogShowGlobals(hwndDlg);
+
+            DialogBoxParam(g_WinObj.hInstance,
+                MAKEINTRESOURCE(IDD_DIALOG_GLOBALS),
+                hwndDlg,
+                (DLGPROC)&GlobalsWindowProc,
+                (LPARAM)hwndDlg);
             break;
         default:
             break;

@@ -1,3 +1,7 @@
+v1.8.2
+HighDPI fixes
+More 20H1 support changes
+
 v1.8.1
 19H2 support
 Preliminary 20H1 support
