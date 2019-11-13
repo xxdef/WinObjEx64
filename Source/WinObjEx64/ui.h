@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        08 Nov 2019
+*  DATE:        09 Nov 2019
 *
 *  Common header file for the user interface.
 *
@@ -166,6 +166,9 @@ typedef struct _VALUE_DESC {
 
 //Display for unknown value
 #define T_Unknown		TEXT("Unknown")
+
+//Empty string (Wine misbehavior fix)
+#define T_EmptyString   TEXT("")
 
 //prop used by sheets
 #define T_PROPCONTEXT	TEXT("propContext")

@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        08 Nov 2019
+*  DATE:        09 Nov 2019
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -124,7 +124,6 @@ VOID AboutDialogInit(
         if (wine_str) {
             _strcpy_a(wine_str, "Wine ");
             _strcat_a(wine_str, wine_ver);
-            _strcat_a(wine_str, " emulation");
             SetDlgItemTextA(hwndDlg, ID_ABOUT_OSNAME, wine_str);
             supHeapFree(wine_str);
         }
@@ -197,6 +196,14 @@ VOID AboutDialogInit(
     SetFocus(GetDlgItem(hwndDlg, IDOK));
 }
 
+/*
+* GlobalsAppendText
+*
+* Purpose:
+*
+* Append text to the multiline edit control.
+*
+*/
 VOID GlobalsAppendText(
     _In_ HWND hwndEdit,
     _In_ LPWSTR lpText)
@@ -457,7 +464,7 @@ VOID AboutDialogCollectGlobals(
 
         rtl_swprintf_s(szBuffer,
             MAX_PATH,
-            TEXT("Licensed for Custom Kernel Signers\t:\t%lu\r\n"),
+            TEXT("Custom Kernel Signers Allowed\t:\t%lu\r\n"),
             bCustomSignersAllowed);
         GlobalsAppendText(hwndEdit, szBuffer);
     }

@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        03 Nov 2019
+*  DATE:        09 Nov 2019
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -202,7 +202,7 @@ VOID UsdDumpSharedRegion(
                         TVIF_TEXT | TVIF_STATE,
                         (UINT)0,
                         (UINT)0,
-                        (LPWSTR)NULL,
+                        (LPWSTR)T_EmptyString,
                         &subitems);
                 }
             }
@@ -233,7 +233,7 @@ VOID UsdDumpSharedRegion(
                     TVIF_TEXT | TVIF_STATE,
                     (UINT)0,
                     (UINT)0,
-                    (LPWSTR)NULL,
+                    (LPWSTR)T_EmptyString,
                     &subitems);
             }
         }
@@ -301,7 +301,7 @@ VOID UsdDumpSharedRegion(
                         TVIF_TEXT | TVIF_STATE,
                         (UINT)0,
                         (UINT)0,
-                        (LPWSTR)NULL,
+                        (LPWSTR)T_EmptyString,
                         &subitems);
 
                     mask &= ~SuiteMasks[i].dwValue;
@@ -452,7 +452,7 @@ VOID UsdDumpSharedRegion(
                         TVIF_TEXT | TVIF_STATE,
                         (UINT)0,
                         (UINT)0,
-                        (LPWSTR)NULL,
+                        (LPWSTR)T_EmptyString,
                         &subitems);
                 }
             }
