@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        03 Nov 2019
+*  DATE:        11 Nov 2019
 *
 *  Common header file for the program support routines.
 *
@@ -630,5 +630,11 @@ BOOLEAN supLoadIconForObjectType(
     _In_ BOOLEAN IsShadow);
 
 VOID supDestroyIconForObjectType(
-    _In_ PROP_OBJECT_INFO *Context,
-    _In_ BOOLEAN IsShadow);
+    _In_ PROP_OBJECT_INFO *Context);
+
+NTSTATUS supOpenTokenByParam(
+    _In_ CLIENT_ID *ClientId,
+    _In_ OBJECT_ATTRIBUTES *ObjectAttributes,
+    _In_ ACCESS_MASK TokenDesiredAccess,
+    _In_ BOOL IsThreadToken,
+    _Out_ PHANDLE TokenHandle);

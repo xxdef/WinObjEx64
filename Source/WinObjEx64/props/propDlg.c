@@ -4,9 +4,9 @@
 *
 *  TITLE:       PROPDLG.C
 *
-*  VERSION:     1.73
+*  VERSION:     1.82
 *
-*  DATE:        19 Mar 2019
+*  DATE:        13 Nov 2019
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -379,6 +379,10 @@ VOID propContextDestroy(
 )
 {
     __try {
+
+        //free associated icons
+        supDestroyIconForObjectType(Context);
+
         //free name
         if (Context->lpObjectName) {
             supHeapFree(Context->lpObjectName);
@@ -571,12 +575,7 @@ VOID propCopyUnnamedObject(
 *
 */
 VOID propCreateDialog(
-    _In_opt_ HWND hwndParent,
-    _In_ LPWSTR lpObjectName,
-    _In_ LPCWSTR lpObjectType,
-    _In_opt_ LPWSTR lpDescription,
-    _In_opt_ PROP_NAMESPACE_INFO *NamespaceObject,
-    _In_opt_ PROP_UNNAMED_OBJECT_INFO *UnnamedObject
+    _In_ PROP_DIALOG_CREATE_SETTINGS *Settings
 )
 {
     BOOL                IsSimpleContext = FALSE;
@@ -591,19 +590,19 @@ VOID propCreateDialog(
     //
     // Mutual exclusion situation.
     //
-    if ((NamespaceObject != NULL) && (UnnamedObject != NULL))
+    if ((Settings->NamespaceObject != NULL) && (Settings->UnnamedObject != NULL))
         return;
 
-    IsSimpleContext = (NamespaceObject != NULL) || (UnnamedObject != NULL);
+    IsSimpleContext = (Settings->NamespaceObject != NULL) || (Settings->UnnamedObject != NULL);
 
     //
     // Allocate context variable, copy name, type, object path.
     //
     propContext = propContextCreate(
-        lpObjectName,
-        lpObjectType,
+        Settings->lpObjectName,
+        Settings->lpObjectType,
         (IsSimpleContext) ? NULL : g_WinObj.CurrentObjectPath,
-        (IsSimpleContext) ? NULL : lpDescription);
+        (IsSimpleContext) ? NULL : Settings->lpDescription);
 
     if (propContext == NULL)
         return;
@@ -611,16 +610,16 @@ VOID propCreateDialog(
     //
     // Remember namespace or unnamed object info.
     //
-    if (NamespaceObject) {
+    if (Settings->NamespaceObject) {
 
         propCopyNamespaceObject(propContext,
-            NamespaceObject);
+            Settings->NamespaceObject);
 
     }
-    else if (UnnamedObject) {
+    else if (Settings->UnnamedObject) {
 
         propCopyUnnamedObject(propContext,
-            UnnamedObject);
+            Settings->UnnamedObject);
 
     }
 
@@ -850,10 +849,20 @@ VOID propCreateDialog(
     // Finally create property sheet.
     //
     if (propContext->IsType) {
-        _strncpy(szCaption, MAX_PATH, lpObjectName, _strlen(lpObjectName));
+        if (Settings->lpObjectName) {
+            _strncpy(szCaption, MAX_PATH, Settings->lpObjectName, _strlen(Settings->lpObjectName));
+        }
+        else {
+            _strcpy(szCaption, TEXT("Unknown Object"));
+        }
     }
     else {
-        _strncpy(szCaption, MAX_PATH, lpObjectType, _strlen(lpObjectType));
+        if (Settings->lpObjectType) {
+            _strncpy(szCaption, MAX_PATH, Settings->lpObjectType, _strlen(Settings->lpObjectType));
+        }
+        else {
+            _strcpy(szCaption, TEXT("Unknown Type"));
+        }
     }
 
     _strcat(szCaption, TEXT(" Properties"));
@@ -861,9 +870,11 @@ VOID propCreateDialog(
     PropHeader.dwSize = sizeof(PropHeader);
     PropHeader.phpage = psp;
     PropHeader.nPages = nPages;
-    PropHeader.dwFlags = PSH_DEFAULT | PSH_NOCONTEXTHELP | PSH_MODELESS;
+    PropHeader.dwFlags = PSH_DEFAULT | PSH_NOCONTEXTHELP;
+    if (Settings->ModalDialog == FALSE)
+        PropHeader.dwFlags |= PSH_MODELESS;
     PropHeader.nStartPage = 0;
-    PropHeader.hwndParent = hwndParent;
+    PropHeader.hwndParent = Settings->hwndParent;
     PropHeader.hInstance = g_WinObj.hInstance;
     PropHeader.pszCaption = szCaption;
 

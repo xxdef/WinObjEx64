@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        03 Nov 2019
+*  DATE:        11 Nov 2019
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -4428,6 +4428,54 @@ INT supGetMaxCompareTwoFixedStrings(
 }
 
 /*
+* supOpenTokenByParam
+*
+* Purpose:
+*
+* Open token handle with given desired access for process/thread.
+*
+*/
+NTSTATUS supOpenTokenByParam(
+    _In_ CLIENT_ID *ClientId,
+    _In_ OBJECT_ATTRIBUTES *ObjectAttributes,
+    _In_ ACCESS_MASK TokenDesiredAccess,
+    _In_ BOOL IsThreadToken,
+    _Out_ PHANDLE TokenHandle)
+{
+    NTSTATUS Status = STATUS_ACCESS_DENIED;
+    HANDLE TokenOwnerHandle = NULL, ObjectHandle = NULL;
+
+    *TokenHandle = NULL;
+
+    if (IsThreadToken) {
+
+        Status = NtOpenThread(&TokenOwnerHandle,
+            THREAD_QUERY_INFORMATION,
+            ObjectAttributes,
+            ClientId);
+        if (NT_SUCCESS(Status)) {
+            Status = NtOpenThreadToken(TokenOwnerHandle, TokenDesiredAccess, FALSE, &ObjectHandle);
+            NtClose(TokenOwnerHandle);
+        }
+
+    }
+    else {
+
+        Status = supOpenProcess(ClientId->UniqueProcess,
+            PROCESS_QUERY_INFORMATION,
+            &TokenOwnerHandle);
+        if (NT_SUCCESS(Status)) {
+            Status = NtOpenProcessToken(TokenOwnerHandle, TokenDesiredAccess, &ObjectHandle);
+            NtClose(TokenOwnerHandle);
+        }
+    }
+
+    *TokenHandle = ObjectHandle;
+
+    return Status;
+}
+
+/*
 * supOpenObjectFromContext
 *
 * Purpose:
@@ -4501,6 +4549,18 @@ HANDLE supOpenObjectFromContext(
             status = NtOpenThread(&hObject, DesiredAccess,
                 ObjectAttributes,
                 &Context->UnnamedObjectInfo.ClientId);
+        }
+        else
+            status = STATUS_INVALID_PARAMETER;
+        break;
+
+    case ObjectTypeToken:
+        if (Context->ContextType == propUnnamed) {
+            status = supOpenTokenByParam(&Context->UnnamedObjectInfo.ClientId,
+                ObjectAttributes,
+                DesiredAccess,
+                Context->UnnamedObjectInfo.IsThreadToken,
+                &hObject);
         }
         else
             status = STATUS_INVALID_PARAMETER;
@@ -6085,9 +6145,9 @@ BOOLEAN supLoadIconForObjectType(
         SendMessage(GetDlgItem(hwndDlg, ID_OBJECT_ICON), STM_SETIMAGE, IMAGE_ICON, (LPARAM)hIcon);
 
         if (IsShadow)
-            Context->ShadowTypeDescription->ObjectIcon = hIcon;
+            Context->ObjectTypeIcon = hIcon;
         else 
-            Context->TypeDescription->ObjectIcon = hIcon;
+            Context->ObjectIcon = hIcon;
 
         return TRUE;
     }
@@ -6104,20 +6164,17 @@ BOOLEAN supLoadIconForObjectType(
 *
 */
 VOID supDestroyIconForObjectType(
-    _In_ PROP_OBJECT_INFO *Context,
-    _In_ BOOLEAN IsShadow
+    _In_ PROP_OBJECT_INFO *Context
 )
 {
-    if (IsShadow) {
-        if (Context->ShadowTypeDescription->ObjectIcon) {
-            DestroyIcon(Context->ShadowTypeDescription->ObjectIcon);
-            Context->ShadowTypeDescription->ObjectIcon = NULL;
+    if (Context->IsType) {
+        if (Context->ObjectTypeIcon) {
+            DestroyIcon(Context->ObjectTypeIcon);
+            Context->ObjectTypeIcon = NULL;
         }
     }
-    else {
-        if (Context->TypeDescription->ObjectIcon) {
-            DestroyIcon(Context->TypeDescription->ObjectIcon);
-            Context->TypeDescription->ObjectIcon = NULL;
-        }
+    if (Context->ObjectIcon) {
+        DestroyIcon(Context->ObjectIcon);
+        Context->ObjectIcon = NULL;
     }
 }

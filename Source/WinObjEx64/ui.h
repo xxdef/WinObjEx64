@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        09 Nov 2019
+*  DATE:        13 Nov 2019
 *
 *  Common header file for the user interface.
 *
@@ -132,6 +132,7 @@ typedef struct _PROP_UNNAMED_OBJECT_INFO {
     CLIENT_ID ClientId;
     SYSTEM_THREAD_INFORMATION ThreadInformation;
     UNICODE_STRING ImageName;
+    BOOL IsThreadToken;
 } PROP_UNNAMED_OBJECT_INFO, *PPROP_UNNAMED_OBJECT_INFO;
 
 typedef struct _PROP_OBJECT_INFO {
@@ -146,10 +147,22 @@ typedef struct _PROP_OBJECT_INFO {
     ULONG_PTR Tag;
     WOBJ_TYPE_DESC *TypeDescription;
     WOBJ_TYPE_DESC *ShadowTypeDescription; //valid only for types, same as TypeDescription for everything else.
+    HICON ObjectIcon;
+    HICON ObjectTypeIcon;
     OBJINFO ObjectInfo; //object dump related structures
     PROP_NAMESPACE_INFO NamespaceInfo;
     PROP_UNNAMED_OBJECT_INFO UnnamedObjectInfo;
 } PROP_OBJECT_INFO, *PPROP_OBJECT_INFO;
+
+typedef struct _PROP_DIALOG_CREATE_SETTINGS {
+    HWND hwndParent;
+    LPWSTR lpObjectName;
+    LPCWSTR lpObjectType;
+    LPWSTR lpDescription;
+    PROP_NAMESPACE_INFO *NamespaceObject;
+    PROP_UNNAMED_OBJECT_INFO *UnnamedObject;
+    BOOL ModalDialog;
+} PROP_DIALOG_CREATE_SETTINGS, *PPROP_DIALOG_CREATE_SETTINGS;
 
 typedef struct _VALUE_DESC {
     LPWSTR lpDescription;

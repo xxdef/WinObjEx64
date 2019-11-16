@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        04 Nov 2019
+*  DATE:        11 Nov 2019
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -2640,27 +2640,6 @@ VOID BasicPropDialogOnInit(
 }
 
 /*
-* BasicPropDialogOnDestroy
-*
-* Purpose:
-*
-* Basic Properties Dialog WM_DESTROY handler.
-*
-*/
-VOID BasicPropDialogOnDestroy(
-    _In_ HWND hwndDlg
-)
-{
-    PROP_OBJECT_INFO *Context = NULL;
-
-    Context = (PROP_OBJECT_INFO*)GetProp(hwndDlg, T_PROPCONTEXT);
-    if (Context) {
-        supDestroyIconForObjectType(Context, FALSE);
-    }
-    RemoveProp(hwndDlg, T_PROPCONTEXT);
-}
-
-/*
 * BasicPropDialogProc
 *
 * Purpose:
@@ -2704,7 +2683,7 @@ INT_PTR CALLBACK BasicPropDialogProc(
         break;
 
     case WM_DESTROY:
-        BasicPropDialogOnDestroy(hwndDlg);
+        RemoveProp(hwndDlg, T_PROPCONTEXT);
         break;
 
     }

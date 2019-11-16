@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        03 Nov 2019
+*  DATE:        13 Nov 2019
 *
 *  IPC supported: Pipes, Mailslots
 *
@@ -458,7 +458,7 @@ VOID IpcDlgShowProperties(
     PROPSHEETHEADER     PropHeader;
     WCHAR               szCaption[MAX_PATH];
 
-    Context = propContextCreate(NULL, NULL, NULL, NULL);
+    Context = propContextCreate(NULL, OBTYPE_NAME_FILE, NULL, NULL);
     if (Context == NULL) {
         return;
     }

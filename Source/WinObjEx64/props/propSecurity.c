@@ -4,9 +4,9 @@
 *
 *  TITLE:       PROPSECURITY.C
 *
-*  VERSION:     1.74
+*  VERSION:     1.82
 *
-*  DATE:        03 May 2019
+*  DATE:        13 May 2019
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -48,7 +48,8 @@ BOOL propSecurityObjectSupported(
         (nTypeIndex != ObjectTypeSession) &&
         (nTypeIndex != ObjectTypeMemoryPartition) &&
         (nTypeIndex != ObjectTypeProcess) &&
-        (nTypeIndex != ObjectTypeThread))
+        (nTypeIndex != ObjectTypeThread) &&
+        (nTypeIndex != ObjectTypeToken))
     {
         return FALSE;
     }
@@ -155,6 +156,11 @@ PSI_ACCESS propGetAccessTable(
     case ObjectTypeThread:
         This->dwAccessMax = MAX_KNOWN_THREAD_ACCESS_VALUE;
         AccessTable = (PSI_ACCESS)&ThreadAccessValues;
+        break;
+    
+    case ObjectTypeToken:
+        This->dwAccessMax = MAX_KNOWN_TOKEN_ACCESS_VALUE;
+        AccessTable = (PSI_ACCESS)&TokenAccessValues;
         break;
     }
 

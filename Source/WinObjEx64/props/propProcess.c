@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        08 Nov 2019
+*  DATE:        13 Nov 2019
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -535,6 +535,9 @@ VOID ProcessListSetInfo(
                 break;
             case ObjectTypeSession:
                 DesiredAccess = SESSION_QUERY_ACCESS;
+                break;
+            case ObjectTypeToken:
+                DesiredAccess = TOKEN_QUERY;
                 break;
             default:
                 DesiredAccess = MAXIMUM_ALLOWED;

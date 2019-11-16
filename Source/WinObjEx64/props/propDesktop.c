@@ -4,9 +4,9 @@
 *
 *  TITLE:       PROPDESKTOP.C
 *
-*  VERSION:     1.73
+*  VERSION:     1.82
 *
-*  DATE:        05 Mar 2019
+*  DATE:        13 Nov 2019
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -347,6 +347,7 @@ VOID DesktopListHandleNotify(
     LPWSTR   lpItemText, lpName;
 
     EXTRASCONTEXT *pDlgContext;
+    PROP_DIALOG_CREATE_SETTINGS propSettings;
 
     if (nhdr == NULL) {
         return;
@@ -404,13 +405,12 @@ VOID DesktopListHandleNotify(
                         l = i + 1;
                 lpName = &lpItemText[l];
 
-                propCreateDialog(
-                    hwndDlg,
-                    lpName,
-                    OBTYPE_NAME_DESKTOP,
-                    NULL,
-                    NULL,
-                    NULL);
+                RtlSecureZeroMemory(&propSettings, sizeof(propSettings));
+                propSettings.hwndParent = hwndDlg;
+                propSettings.lpObjectName = lpName;
+                propSettings.lpObjectType = OBTYPE_NAME_DESKTOP;
+
+                propCreateDialog(&propSettings);
 
                 supHeapFree(lpItemText);
             }
