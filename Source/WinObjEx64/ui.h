@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        13 Nov 2019
+*  DATE:        16 Nov 2019
 *
 *  Common header file for the user interface.
 *
@@ -173,6 +173,9 @@ typedef struct _VALUE_DESC {
 //Display simple "N/A" if no info available
 #define T_CannotQuery	TEXT("N/A")
 
+//Value is not defined
+#define T_None          TEXT("None")
+
 //Display for unknown type value
 #define T_UnknownType	TEXT("Unknown Type")
 #define T_UnknownFlag	TEXT("Unknown Flag")
@@ -180,7 +183,7 @@ typedef struct _VALUE_DESC {
 //Display for unknown value
 #define T_Unknown		TEXT("Unknown")
 
-//Empty string (Wine misbehavior fix)
+//Empty string
 #define T_EmptyString   TEXT("")
 
 //prop used by sheets

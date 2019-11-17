@@ -440,6 +440,14 @@ VOID TokenPageListInfo(
     NtClose(ObjectHandle);
 }
 
+/*
+* TokenPageShowAdvancedProperties
+*
+* Purpose:
+*
+* Show properties of selected token object.
+*
+*/
 VOID TokenPageShowAdvancedProperties(
     _In_ HWND hwndDlg)
 {
@@ -447,7 +455,11 @@ VOID TokenPageShowAdvancedProperties(
     PROP_UNNAMED_OBJECT_INFO TokenObject;
     PROP_DIALOG_CREATE_SETTINGS propSettings;
 
+    LPWSTR TokenStingFormatProcess = TEXT("Process Token, PID:%llu");
+    LPWSTR TokenStingFormatThread = TEXT("Thread Token, PID:%llu, TID:%llu");
+
     HANDLE TokenHandle = NULL;
+    WCHAR szFakeName[MAX_PATH + 1];
 
     RtlSecureZeroMemory(&TokenObject, sizeof(PROP_UNNAMED_OBJECT_INFO));
 
@@ -460,6 +472,8 @@ VOID TokenPageShowAdvancedProperties(
     TokenObject.IsThreadToken =
         (BOOL)HandleToULong(GetProp(hwndDlg, T_TOKEN_PROP_TYPE));
 
+    RtlSecureZeroMemory(szFakeName, sizeof(szFakeName));
+
     if (NT_SUCCESS(supOpenTokenByParam(&TokenObject.ClientId,
         &ObjectAttributes,
         TOKEN_QUERY,
@@ -471,7 +485,19 @@ VOID TokenPageShowAdvancedProperties(
     }
 
     RtlSecureZeroMemory(&propSettings, sizeof(propSettings));
+
+    if (TokenObject.IsThreadToken) {
+        rtl_swprintf_s(szFakeName, MAX_PATH, TokenStingFormatThread,
+            TokenObject.ClientId.UniqueProcess,
+            TokenObject.ClientId.UniqueThread);
+    }
+    else {
+        rtl_swprintf_s(szFakeName, MAX_PATH, TokenStingFormatProcess,
+            TokenObject.ClientId.UniqueProcess);
+    }
+
     propSettings.hwndParent = hwndDlg;
+    propSettings.lpObjectName = szFakeName;
     propSettings.lpObjectType = OBTYPE_NAME_TOKEN;
     propSettings.ModalDialog = TRUE;
     propSettings.UnnamedObject = &TokenObject;

@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.01
 *
-*  DATE:        02 Nov 2019
+*  DATE:        15 Nov 2019
 *
 *  WinObjEx64 ApiSetView plugin.
 *
@@ -243,7 +243,7 @@ BOOL InitTreeList(
 
     uDpi = g_ctx.ParamBlock.uiGetDPIValue(NULL);
     dpiScaledX = MulDiv(10, uDpi, DefaultSystemDpi);
-    dpiScaledY = MulDiv(10, uDpi, DefaultSystemDpi);
+    dpiScaledY = dpiScaledX;
 
     GetWindowRect(hwndParent, &rc);
 

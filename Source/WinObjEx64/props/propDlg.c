@@ -696,6 +696,9 @@ VOID propCreateDialog(
     case ObjectTypeThread:
         Page.pszTemplate = MAKEINTRESOURCE(IDD_PROP_THREAD);
         break;
+    case ObjectTypeToken:
+        Page.pszTemplate = MAKEINTRESOURCE(IDD_PROP_TOKEN);
+        break;
     case ObjectTypeType:
     default:
         Page.pszTemplate = MAKEINTRESOURCE(IDD_PROP_BASIC);
