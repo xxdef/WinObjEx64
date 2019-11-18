@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        16 Nov 2019
+*  DATE:        18 Nov 2019
 *
 *  Common header file for the user interface.
 *
@@ -175,6 +175,11 @@ typedef struct _VALUE_DESC {
 
 //Value is not defined
 #define T_None          TEXT("None")
+#define T_NoneValue     TEXT("(None)")
+
+//Value is invalid
+#define T_Invalid       TEXT("Invalid")
+#define T_InvalidValue  TEXT("(Invalid)")
 
 //Display for unknown type value
 #define T_UnknownType	TEXT("Unknown Type")
@@ -182,6 +187,7 @@ typedef struct _VALUE_DESC {
 
 //Display for unknown value
 #define T_Unknown		TEXT("Unknown")
+#define T_UnknownValue  TEXT("(Unknown)")
 
 //Empty string
 #define T_EmptyString   TEXT("")

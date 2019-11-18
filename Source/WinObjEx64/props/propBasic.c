@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        11 Nov 2019
+*  DATE:        18 Nov 2019
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -2348,7 +2348,7 @@ LPWSTR propFormatTokenAttribute(
             Result = (LPWSTR)supHeapAlloc((MinimumResultLength + ResultLength) * sizeof(WCHAR));
             if (Result) {
                 rtl_swprintf_s(Result, MinimumResultLength,
-                    TEXT("Version %I64u: "), Attribute->Values.pFqbn[ValueIndex].Version);
+                    TEXT("[%lu] Version %I64u: "), ValueIndex, Attribute->Values.pFqbn[ValueIndex].Version);
 
                 RtlCopyMemory(_strend(Result),
                     TempFQBNPtr->Name.Buffer,
@@ -2364,7 +2364,7 @@ LPWSTR propFormatTokenAttribute(
                     Result = (LPWSTR)supHeapAlloc((MinimumResultLength + ResultLength) * sizeof(WCHAR));
                     if (Result) {
                         rtl_swprintf_s(Result, MinimumResultLength + ResultLength,
-                            TEXT("Value %lu: %s"), ValueIndex, TempString);
+                            TEXT("[%lu] %s"), ValueIndex, TempString);
                     }
                     LocalFree(TempString);
                 }
@@ -2380,7 +2380,7 @@ LPWSTR propFormatTokenAttribute(
             Result = (LPWSTR)supHeapAlloc((MinimumResultLength + ResultLength) * sizeof(WCHAR));
             if (Result) {
                 rtl_swprintf_s(Result, MinimumResultLength,
-                    TEXT("Value %lu: "), ValueIndex);
+                    TEXT("[%lu] "), ValueIndex);
 
                 RtlCopyMemory(_strend(Result),
                     TempUstringPtr->Buffer,
@@ -2389,7 +2389,7 @@ LPWSTR propFormatTokenAttribute(
             break;
 
         default:
-            _strcpy(szTemp, TEXT("(Unknown)"));
+            _strcpy(szTemp, T_UnknownValue);
             IsSimpleConvert = TRUE;
             break;
 
@@ -2400,7 +2400,7 @@ LPWSTR propFormatTokenAttribute(
             Result = (LPWSTR)supHeapAlloc((MinimumResultLength + ResultLength) * sizeof(WCHAR));
             if (Result) {
                 rtl_swprintf_s(Result, MinimumResultLength + ResultLength,
-                    TEXT("Value %lu: %s"), ValueIndex, szTemp);
+                    TEXT("[%lu] %s"), ValueIndex, szTemp);
             }
         }
     }
@@ -2424,6 +2424,7 @@ VOID propBasicQueryToken(
     _In_ BOOL ExtendedInfoAvailable
 )
 {
+    BOOLEAN bFlagSet = FALSE;
     HANDLE hObject;
     PTOKEN_SECURITY_ATTRIBUTES_INFORMATION SecurityAttributes;
     PTOKEN_SECURITY_ATTRIBUTE_V1 Attribute;
@@ -2434,6 +2435,9 @@ VOID propBasicQueryToken(
     WCHAR szBuffer[MAX_PATH + 1];
 
     HWND TreeView = GetDlgItem(hwndDlg, IDC_TOKEN_ATTRLIST);
+
+    SetWindowTheme(TreeView, TEXT("Explorer"), NULL);
+    TreeView_DeleteAllItems(TreeView);
 
     if (Context == NULL) {
         return;
@@ -2446,9 +2450,6 @@ VOID propBasicQueryToken(
     if (!propOpenCurrentObject(Context, &hObject, TOKEN_QUERY)) {
         return;
     }
-
-    SetWindowTheme(TreeView, TEXT("Explorer"), NULL);
-    TreeView_DeleteAllItems(TreeView);
 
     //
     // List security attributes.
@@ -2486,7 +2487,7 @@ VOID propBasicQueryToken(
             //
             switch (Attribute->ValueType) {
             case TOKEN_SECURITY_ATTRIBUTE_TYPE_INVALID:
-                lpType = TEXT("Invalid");
+                lpType = T_Invalid;
                 break;
             case TOKEN_SECURITY_ATTRIBUTE_TYPE_INT64:
                 lpType = TEXT("Int64");
@@ -2510,7 +2511,7 @@ VOID propBasicQueryToken(
                 lpType = TEXT("Octet string");
                 break;
             default:
-                lpType = TEXT("(Unknown)");
+                lpType = T_UnknownValue;
                 break;
             }
             _strcpy(szBuffer, TEXT("Type: "));
@@ -2525,24 +2526,60 @@ VOID propBasicQueryToken(
             //
             _strcpy(szBuffer, TEXT("Flags: "));
 
-            if (Attribute->Flags & TOKEN_SECURITY_ATTRIBUTE_MANDATORY)
-                _strcat(szBuffer, TEXT("Mandatory, "));
-            if (Attribute->Flags & TOKEN_SECURITY_ATTRIBUTE_DISABLED)
-                _strcat(szBuffer, TEXT("Disabled, "));
-            if (Attribute->Flags & TOKEN_SECURITY_ATTRIBUTE_DISABLED_BY_DEFAULT)
-                _strcat(szBuffer, TEXT("Default disabled, "));
-            if (Attribute->Flags & TOKEN_SECURITY_ATTRIBUTE_USE_FOR_DENY_ONLY)
-                _strcat(szBuffer, TEXT("Use for deny only, "));
-            if (Attribute->Flags & TOKEN_SECURITY_ATTRIBUTE_VALUE_CASE_SENSITIVE)
-                _strcat(szBuffer, TEXT("Case-sensitive, "));
-            if (Attribute->Flags & TOKEN_SECURITY_ATTRIBUTE_NON_INHERITABLE)
-                _strcat(szBuffer, TEXT("Non-inheritable, "));
-            if (Attribute->Flags & TOKEN_SECURITY_ATTRIBUTE_COMPARE_IGNORE)
-                _strcat(szBuffer, TEXT("Compare-ignore, "));
+            if (Attribute->Flags == 0) {
+                _strcat(szBuffer, T_NoneValue);
+            }
+            else {
 
-            _strcat(szBuffer, TEXT("Value: 0x"));
-            ultohex(Attribute->Flags, _strend(szBuffer));
+                _strcat(szBuffer, TEXT("("));
+                ultohex(Attribute->Flags, _strend(szBuffer));
+                _strcat(szBuffer, TEXT(") "));
+
+                if (Attribute->Flags & TOKEN_SECURITY_ATTRIBUTE_NON_INHERITABLE) {
+                    if (bFlagSet) _strcat(szBuffer, TEXT(", "));
+                    _strcat(szBuffer, TEXT("Non-inheritable"));
+                    bFlagSet = TRUE;
+                }
+                if (Attribute->Flags & TOKEN_SECURITY_ATTRIBUTE_VALUE_CASE_SENSITIVE) {
+                    if (bFlagSet) _strcat(szBuffer, TEXT(", "));
+                    _strcat(szBuffer, TEXT("Case-sensitive"));
+                    bFlagSet = TRUE;
+                }
+                if (Attribute->Flags & TOKEN_SECURITY_ATTRIBUTE_USE_FOR_DENY_ONLY) {
+                    if (bFlagSet) _strcat(szBuffer, TEXT(", "));
+                    _strcat(szBuffer, TEXT("Use for deny only"));
+                    bFlagSet = TRUE;
+                }
+                if (Attribute->Flags & TOKEN_SECURITY_ATTRIBUTE_DISABLED_BY_DEFAULT) {
+                    if (bFlagSet) _strcat(szBuffer, TEXT(", "));
+                    _strcat(szBuffer, TEXT("Default disabled"));
+                    bFlagSet = TRUE;
+                }
+                if (Attribute->Flags & TOKEN_SECURITY_ATTRIBUTE_DISABLED) {
+                    if (bFlagSet) _strcat(szBuffer, TEXT(", "));
+                    _strcat(szBuffer, TEXT("Disabled"));
+                    bFlagSet = TRUE;
+                }
+                if (Attribute->Flags & TOKEN_SECURITY_ATTRIBUTE_MANDATORY) {
+                    if (bFlagSet) _strcat(szBuffer, TEXT(", "));
+                    _strcat(szBuffer, TEXT("Mandatory"));
+                    bFlagSet = TRUE;
+                }
+                if (Attribute->Flags & TOKEN_SECURITY_ATTRIBUTE_COMPARE_IGNORE) {
+                    if (bFlagSet) _strcat(szBuffer, TEXT(", "));
+                    _strcat(szBuffer, TEXT("Compare-ignore"));
+                }
+
+            }
             TreeView_InsertItem(TreeView, &TVItem);
+
+            _strcpy(szBuffer, TEXT("Values"));
+            TVItem.hParent = RootItem;
+            TVItem.item.mask = TVIF_TEXT | TVIF_STATE;
+            TVItem.item.state = TVIS_EXPANDED;
+            TVItem.item.stateMask = TVIS_EXPANDED;
+            TVItem.item.pszText = szBuffer;
+            RootItem = TreeView_InsertItem(TreeView, &TVItem);
 
             for (j = 0; j < Attribute->ValueCount; j++) {
 
@@ -2554,7 +2591,7 @@ VOID propBasicQueryToken(
                     TVItem.item.pszText = lpType;
                 }
                 else {
-                    TVItem.item.pszText = TEXT("(Invalid)");
+                    TVItem.item.pszText = T_InvalidValue;
                 }
 
                 TreeView_InsertItem(TreeView, &TVItem);
