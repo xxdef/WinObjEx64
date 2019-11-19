@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        13 Nov 2019
+*  DATE:        18 Nov 2019
 *
 *  Common header file for properties dialog.
 *
@@ -22,8 +22,9 @@
 // Externs for global properties variables.
 //
 extern HWND g_PropWindow;
+extern HWND g_PsTokenWindow;
 extern HWND g_PsPropWindow;
-extern HWND g_SubPropWindow;
+extern HWND g_DesktopPropWindow;
 extern HWND g_NamespacePropWindow;
 
 //

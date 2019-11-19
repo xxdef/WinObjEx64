@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        13 Nov 2019
+*  DATE:        18 Nov 2019
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -287,7 +287,11 @@ VOID PsListHandleObjectProp(
     PROP_UNNAMED_OBJECT_INFO *tempEntry;
     PROP_DIALOG_CREATE_SETTINGS propSettings;
 
+    //
+    // Only one process/thread properties dialog at the same time allowed.
+    //
     if (g_PsPropWindow != NULL) {
+        SetActiveWindow(g_PsPropWindow);
         return;
     }
 

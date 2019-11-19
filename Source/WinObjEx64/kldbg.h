@@ -4,9 +4,9 @@
 *
 *  TITLE:       KLDBG.H
 *
-*  VERSION:     1.80
+*  VERSION:     1.82
 *
-*  DATE:        20 July 2019
+*  DATE:        18 Nov 2019
 *
 *  Common header file for the Kernel Debugger Driver support.
 *
@@ -29,6 +29,8 @@
 #endif
 
 #define OBJECT_SHIFT 8
+
+#define KM_OBJECTS_ROOT_DIRECTORY  L"\\"
 
 typedef ULONG_PTR *PUTable;
 
@@ -172,6 +174,7 @@ typedef struct _NOTIFICATION_CALLBACKS {
     ULONG_PTR IopTapeFileSystemQueueHead;
     ULONG_PTR IopNetworkFileSystemQueueHead;
     ULONG_PTR DbgkLmdCallbacks;
+    ULONG_PTR PsAltSystemCallHandlers;
     ULONG_PTR CiCallbacks;
 } NOTIFICATION_CALLBACKS, *PNOTIFICATION_CALLBACKS;
 
@@ -304,7 +307,7 @@ ULONG_PTR kdFindCiCallbacks(
     _In_ PKLDBGCONTEXT Context);
 
 ULONG_PTR kdQueryWin32kApiSetTable(
-	_In_ HMODULE hWin32k);
+    _In_ HMODULE hWin32k);
 
 BOOL kdReadSystemMemoryEx(
     _In_ ULONG_PTR Address,

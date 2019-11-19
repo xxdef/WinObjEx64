@@ -4,9 +4,9 @@
 *
 *  TITLE:       KLDBG_PATTERNS.H
 *
-*  VERSION:     1.81
+*  VERSION:     1.82
 *
-*  DATE:        18 Oct 2019
+*  DATE:        18 Nov 2019
 *
 *  Header with search patterns used by KLDBG.
 *

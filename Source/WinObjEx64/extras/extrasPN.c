@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        13 Nov 2019
+*  DATE:        18 Nov 2019
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -53,8 +53,13 @@ VOID PNDlgShowObjectProperties(
     PROP_NAMESPACE_INFO propNamespace;
     PROP_DIALOG_CREATE_SETTINGS propSettings;
 
-    if (g_NamespacePropWindow != NULL)
+    //
+    // Only one namespace object properties dialog at the same time allowed.
+    //
+    if (g_NamespacePropWindow != NULL) {
+        SetActiveWindow(g_NamespacePropWindow);
         return;
+    }
 
     if (ListView_GetSelectedCount(PnDlgContext.ListView) == 0) {
         return;

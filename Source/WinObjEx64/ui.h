@@ -161,7 +161,6 @@ typedef struct _PROP_DIALOG_CREATE_SETTINGS {
     LPWSTR lpDescription;
     PROP_NAMESPACE_INFO *NamespaceObject;
     PROP_UNNAMED_OBJECT_INFO *UnnamedObject;
-    BOOL ModalDialog;
 } PROP_DIALOG_CREATE_SETTINGS, *PPROP_DIALOG_CREATE_SETTINGS;
 
 typedef struct _VALUE_DESC {

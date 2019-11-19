@@ -494,7 +494,7 @@ VOID propSetProcessTrustLabelInfo(
 
     ULONG ProtectionType = 0, ProtectionLevel = 0, i;
 
-    LPWSTR lpType = TEXT(""), lpLevel = TEXT("");
+    LPWSTR lpType = T_EmptyString, lpLevel = T_EmptyString;
 
     WCHAR szBuffer[0x100];
 
@@ -502,7 +502,7 @@ VOID propSetProcessTrustLabelInfo(
     // Re-open current object as we need READ_CONTROL.
     //
     if (!propOpenCurrentObject(Context, &hObject, READ_CONTROL)) {
-        SetDlgItemText(hwndDlg, ID_OBJECT_TRUSTLABEL, TEXT(""));
+        SetDlgItemText(hwndDlg, ID_OBJECT_TRUSTLABEL, T_EmptyString);
         return;
     }
 
@@ -541,7 +541,7 @@ VOID propSetProcessTrustLabelInfo(
 
     if (bFail) {
         ShowWindow(GetDlgItem(hwndDlg, ID_PTL_CAPTION), SW_HIDE);
-        SetDlgItemText(hwndDlg, ID_OBJECT_TRUSTLABEL, TEXT(""));
+        SetDlgItemText(hwndDlg, ID_OBJECT_TRUSTLABEL, T_EmptyString);
     }
 }
 
@@ -3006,21 +3006,19 @@ INT_PTR CALLBACK BasicPropDialogProc(
     case WM_INITDIALOG:
         BasicPropDialogOnInit(hwndDlg, lParam);
         return 1;
-        break;
 
     case WM_SHOWWINDOW:
         if (wParam) {
             Context = (PROP_OBJECT_INFO*)GetProp(hwndDlg, T_PROPCONTEXT);
             if (Context) {
                 propSetBasicInfo(Context, hwndDlg);
+                return 1;
             }
         }
-        return 1;
         break;
 
     case WM_COMMAND:
         return BasicPropDialogOnCommand(hwndDlg, wParam);
-        break;
 
     case WM_DESTROY:
         RemoveProp(hwndDlg, T_PROPCONTEXT);

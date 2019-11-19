@@ -1314,7 +1314,7 @@ BOOL ObGetDirectoryObjectAddress(
         return bFound;
 
     if (lpDirectory == NULL) {
-        lpTarget = L"\\";
+        lpTarget = KM_OBJECTS_ROOT_DIRECTORY;
     }
     else {
         lpTarget = lpDirectory;
@@ -1569,7 +1569,7 @@ POBJINFO ObpWalkDirectory(
         //
         // Check if root special case.
         //
-        if (_strcmpi(lpObjectToFind, L"\\") == 0) {
+        if (_strcmpi(lpObjectToFind, KM_OBJECTS_ROOT_DIRECTORY) == 0) {
 
             return ObpCopyObjectBasicInfo(
                 DirectoryAddress,
@@ -2286,7 +2286,7 @@ BOOL ObCollectionCreate(
                     TRUE,
                     &Collection->ListHead,
                     Collection->Heap,
-                    L"\\",
+                    KM_OBJECTS_ROOT_DIRECTORY,
                     g_kdctx.DirectoryRootAddress,
                     g_kdctx.DirectoryTypeIndex);
 
@@ -2567,8 +2567,13 @@ BOOL kdIsDebugBoot(
     SYSTEM_KERNEL_DEBUGGER_INFORMATION kdInfo;
 
     RtlSecureZeroMemory(&kdInfo, sizeof(kdInfo));
-    NtQuerySystemInformation(SystemKernelDebuggerInformation, &kdInfo, sizeof(kdInfo), &rl);
-    return kdInfo.KernelDebuggerEnabled;
+    if (NT_SUCCESS(NtQuerySystemInformation(SystemKernelDebuggerInformation,
+        &kdInfo, sizeof(kdInfo), &rl)))
+    {
+        return kdInfo.KernelDebuggerEnabled;
+    }
+
+    return FALSE;
 }
 
 /*
@@ -3212,7 +3217,7 @@ ULONG_PTR kdQueryWin32kApiSetTable(
 
                 if (SearchPatternSize == RtlCompareMemory(&ptrCode[Index],
                     SearchPattern,
-                    SearchPatternSize)) 
+                    SearchPatternSize))
                 {
                     Index += hs.len;
                     hde64_disasm((void*)(ptrCode + Index), &hs);

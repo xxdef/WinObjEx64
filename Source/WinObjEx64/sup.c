@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        11 Nov 2019
+*  DATE:        18 Nov 2019
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -1024,7 +1024,7 @@ LPWSTR supGetItemText(
     _In_ HWND ListView,
     _In_ INT nItem,
     _In_ INT nSubItem,
-    _Out_opt_ PSIZE_T lpSize
+    _Out_opt_ PSIZE_T lpSize //length in bytes
 )
 {
     INT     len;

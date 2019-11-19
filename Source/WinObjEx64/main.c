@@ -161,8 +161,13 @@ VOID MainWindowHandleObjectTreeProp(
 
     WCHAR                       szBuffer[MAX_PATH + 1];
 
-    if (g_PropWindow != NULL)
+    //
+    // Only one object properties dialog at the same time allowed.
+    //
+    if (g_PropWindow != NULL) {
+        SetActiveWindow(g_PropWindow);
         return;
+    }
 
     if (SelectedTreeItem == NULL)
         return;
@@ -902,8 +907,8 @@ BOOL MainWindowDlgMsgHandler(
         }
     }
 
-    if (g_SubPropWindow != NULL)
-        if (IsDialogMessage(g_SubPropWindow, &msg))
+    if (g_DesktopPropWindow != NULL)
+        if (IsDialogMessage(g_DesktopPropWindow, &msg))
             return TRUE;
 
     if (g_PropWindow != NULL)

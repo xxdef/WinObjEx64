@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.82
 *
-*  DATE:        13 Nov 2019
+*  DATE:        18 Nov 2019
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -38,7 +38,8 @@ WNDPROC PropSheetOriginalWndProc = NULL;
 //handle to the PropertySheet window
 HWND g_PropWindow = NULL;
 HWND g_PsPropWindow = NULL;
-HWND g_SubPropWindow = NULL;
+HWND g_PsTokenWindow = NULL;
+HWND g_DesktopPropWindow = NULL;
 HWND g_NamespacePropWindow = NULL;
 
 /*
@@ -109,6 +110,10 @@ BOOL propOpenCurrentObject(
         bResult = (hObject != NULL);
         if (bResult) {
             *phObject = hObject;
+            SetLastError(ERROR_SUCCESS);
+        }
+        else {
+            SetLastError(ERROR_ACCESS_DENIED);
         }
         return bResult;
     }
@@ -125,6 +130,7 @@ BOOL propOpenCurrentObject(
         bResult = (hObject != NULL);
         if (bResult) {
             *phObject = hObject;
+            SetLastError(ERROR_SUCCESS);
         }
         return bResult;
     }
@@ -456,18 +462,20 @@ LRESULT WINAPI PropSheetCustomWndProc(
         break;
 
     case WM_CLOSE:
-        if (hwnd == g_PsPropWindow) {
+        if (hwnd == g_PsTokenWindow) {
+            g_PsTokenWindow = NULL;
+        } else if (hwnd == g_PsPropWindow) {
             g_PsPropWindow = NULL;
         }
         else if (hwnd == g_NamespacePropWindow) {
             g_NamespacePropWindow = NULL;
         }
-        else if (hwnd == g_SubPropWindow) {
-            g_SubPropWindow = NULL;
+        else if (hwnd == g_DesktopPropWindow) {
+            g_DesktopPropWindow = NULL;
         }
         if (hwnd == g_PropWindow) {
-            if (g_SubPropWindow) {
-                g_SubPropWindow = NULL;
+            if (g_DesktopPropWindow) {
+                g_DesktopPropWindow = NULL;
             }
             //restore previous focus
             if (hPrevFocus) {
@@ -778,6 +786,7 @@ VOID propCreateDialog(
     case ObjectTypeProcess:
     case ObjectTypeThread:
     case ObjectTypeWinstation:
+    case ObjectTypeToken:
         RtlSecureZeroMemory(&Page, sizeof(Page));
         Page.dwSize = sizeof(PROPSHEETPAGE);
         Page.dwFlags = PSP_DEFAULT | PSP_USETITLE;
@@ -873,9 +882,7 @@ VOID propCreateDialog(
     PropHeader.dwSize = sizeof(PropHeader);
     PropHeader.phpage = psp;
     PropHeader.nPages = nPages;
-    PropHeader.dwFlags = PSH_DEFAULT | PSH_NOCONTEXTHELP;
-    if (Settings->ModalDialog == FALSE)
-        PropHeader.dwFlags |= PSH_MODELESS;
+    PropHeader.dwFlags = PSH_DEFAULT | PSH_NOCONTEXTHELP | PSH_MODELESS;
     PropHeader.nStartPage = 0;
     PropHeader.hwndParent = Settings->hwndParent;
     PropHeader.hInstance = g_WinObj.hInstance;
@@ -898,8 +905,11 @@ VOID propCreateDialog(
             case ObjectTypeThread:
                 g_PsPropWindow = hwndDlg;
                 break;
+            case ObjectTypeToken:
+                g_PsTokenWindow = hwndDlg;
+                break;
             case ObjectTypeDesktop:
-                g_SubPropWindow = hwndDlg;
+                g_DesktopPropWindow = hwndDlg;
                 break;
             default:
                 g_PropWindow = hwndDlg;

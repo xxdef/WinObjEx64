@@ -461,6 +461,14 @@ VOID TokenPageShowAdvancedProperties(
     HANDLE TokenHandle = NULL;
     WCHAR szFakeName[MAX_PATH + 1];
 
+    //
+    // Only one token properties dialog at the same time allowed.
+    //
+    if (g_PsTokenWindow != NULL) {
+        SetActiveWindow(g_PsTokenWindow);
+        return;
+    }
+
     RtlSecureZeroMemory(&TokenObject, sizeof(PROP_UNNAMED_OBJECT_INFO));
 
     TokenObject.ClientId.UniqueProcess =
@@ -499,7 +507,6 @@ VOID TokenPageShowAdvancedProperties(
     propSettings.hwndParent = hwndDlg;
     propSettings.lpObjectName = szFakeName;
     propSettings.lpObjectType = OBTYPE_NAME_TOKEN;
-    propSettings.ModalDialog = TRUE;
     propSettings.UnnamedObject = &TokenObject;
 
     propCreateDialog(&propSettings);
